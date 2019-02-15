@@ -15,7 +15,8 @@ geometry: margin=2cm
 
 10. En tapant la commande `nslookup`, on peut récupérer le long d'un ordinateur à partir de son nom court.
 
-Example:
+Exemple:\newline
+*Note: dans la suite, les lignes commençant par $ sont des commandes et les lignes suivantes en sont le résultat*
 ```(bash)
 $ nslookup c45-01
 
@@ -94,7 +95,6 @@ rtt min/avg/max/mdev = 1.174/3.372/4.966/1.144 ms
 
 ```(bash)
 $ expr 2 + 3
-
 5
 ```
 
@@ -102,3 +102,42 @@ $ expr 2 + 3
 
 18. la commande suivante permet d'enregistrer sa clé ssh public sur le server de l'école et de ne pas avoir à entrer de mot de passe pour l'authentification : \newline
 `cat ~/.ssh/id_rsa.pub | ssh ablicq@ssh.enst.fr 'cat >> .ssh/authorized_keys'`
+
+\newpage
+
+# III- Fichiers locaux/distants
+
+19. On execute la commande suivante:
+```(bash)
+$ cd && pwd
+/home/aurelien
+```
+
+20. La commande `echo bonjour > fperso.txt` permet de créer un fichier fperso.txt et d'y insérer le texte bonjour.
+
+21. La commande df permet d'afficher et d'avoir des informations sur la localisation du fichier indiqué.
+```(bash)
+$ df fperso.txt
+Sys. de fichiers Taille Utilisé Dispo Uti% Monté sur
+/dev/sda1          915G     36G  832G   5% /home
+```
+
+Notre fichier est donc créé sur le disque dur de l'ordinateur.
+
+
+22. Après avoir créer un fichier contenant "some text", on éxécute les commandes:
+```(bash)
+$ cat /tmp/aurelien/ftemp.txt
+some text
+
+$ df /tmp/aurelien/ftemp.txt
+Sys. de fichiers blocs de 1K Utilisé Disponible Uti% Monté sur
+tmpfs                4023980   43828    3980152   2% /tmp
+```
+Le système tmpfs (temporary file system) résidant dans la RAM, c'est là que notre fichier est stocké.
+
+23. On créé dans le répertoire personnel le fichier text.txt contenant "mon texte sur NFS".
+```(bash)
+$ cat ~/text.txt
+mon texte sur NFS
+```
