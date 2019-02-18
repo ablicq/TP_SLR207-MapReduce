@@ -141,3 +141,12 @@ Le système tmpfs (temporary file system) résidant dans la RAM, c'est là que n
 $ cat ~/text.txt
 mon texte sur NFS
 ```
+
+24. On vérifie bien que depuis la machine *c128-32*, en se connectant en ssh sur les machines *c128-26* et *c128-34*, le fichier text.txt est présent et contient le texte "Mon texte sur NFS".
+
+25. En utilisant la commande adéquate, on créer le ficher /tmp/ablicq/local.txt contenant le text "Mon ficher local".
+
+26. En effectuant la commande `ls /tmp` sur les machines B et C, le dossier créé sur la machine A n'apparait pas.
+
+27. La commande `scp src:path dest:path` permet de transférer un fichier depuis la source vers la destination dans les chemins indiqués.\newline
+Par example, la commande `scp /tmp/ablicq/local.txt ablicq@c128-26.enst.fr:/tmp/ablicq/local.txt` transfère depuis l'ordinateur local, un fichier vers l'ordinateur c128-26
