@@ -10,7 +10,7 @@ geometry: margin=2cm
 8. Avec le fichier *sante\_publique.txt*, on a un temps de calcul de 2.5 secondes
 9. Avec le fichier de pages web, on a un temps de calcul de 65 secondes
 
-\newpage
+---
 # II- ordinateurs en réseau
 
 10. En tapant la commande `nslookup`, on peut récupérer le long d'un ordinateur à partir de son nom court.
@@ -150,3 +150,9 @@ mon texte sur NFS
 
 27. La commande `scp src:path dest:path` permet de transférer un fichier depuis la source vers la destination dans les chemins indiqués.\newline
 Par example, la commande `scp /tmp/ablicq/local.txt ablicq@c128-26.enst.fr:/tmp/ablicq/local.txt` transfère depuis l'ordinateur local, un fichier vers l'ordinateur c128-26
+
+\newpage
+
+# V- Ligne de commande depuis Java
+
+34. La constante `ProcessBuilder.Redirect.INHERIT` permet de faire hériter le processus construit Java appelant. Par exemple, `pb.redirectError(ProcessBuilder.Redirect.INHERIT);` redirige la sortie d'érreur du ProcessBuilder pb vers la sortie d'érreur du programme Java.
