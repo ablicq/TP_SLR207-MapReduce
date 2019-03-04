@@ -6,7 +6,13 @@ import java.util.concurrent.TimeUnit;
 public class Main {
     public static void main(String[] args) throws IOException {
         long maxTimeMillis = 5000;
-        ProcessBuilder pb = new ProcessBuilder("java", "-jar", "/tmp/ablicq/SLAVE.jar");
+        String host = "c45-19";
+        ProcessBuilder pb = new ProcessBuilder(
+                "ssh",
+                "-o", "UserKnownHostsFile=/dev/null",
+                "-o", "StrictHostKeyChecking=no",
+                "ablicq@"+host,
+                "java", "-jar", "/tmp/ablicq/slave.jar");
         Process p = pb.start();
 
         BufferedInputStream pStd = new BufferedInputStream(p.getInputStream());
