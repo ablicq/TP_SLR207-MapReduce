@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/Deploy/Deploy.iml" filepath="$PROJECT_DIR$/Deploy/Deploy.iml" />
       <module fileurl="file://$PROJECT_DIR$/MASTER/MASTER.iml" filepath="$PROJECT_DIR$/MASTER/MASTER.iml" />
       <module fileurl="file://$PROJECT_DIR$/SLAVE/SLAVE.iml" filepath="$PROJECT_DIR$/SLAVE/SLAVE.iml" />
       <module fileurl="file://$PROJECT_DIR$/hadoop.iml" filepath="$PROJECT_DIR$/hadoop.iml" />
