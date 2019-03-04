@@ -3,13 +3,26 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+
 public class Deployer {
+    /**
+     * the list of hosts indicated in the configuration file
+     */
     ArrayList<String> hostsList = new ArrayList<>();
 
+    /**
+     * Constructor of the Deployer.
+     * Parse the given config file to the hostsList
+     * @param configFile the config file containing the hosts to which we wish to deploy
+     */
     public Deployer(String configFile) {
         parseHosts(configFile);
     }
 
+    /**
+     * Parse the given config file to the hostsList
+     * @param configFile the config file containing the hosts to which we wish to deploy
+     */
     private void parseHosts(String configFile){
         // read the hosts list from the config file
         try (Scanner in = new Scanner(new FileInputStream(configFile))) {
@@ -21,6 +34,9 @@ public class Deployer {
     }
 
 
+    /**
+     * Send the command 'hostname' to every host to test the connection
+     */
     public void runTest(){
         for(String host : hostsList){
             ProcessBuilder pb = new ProcessBuilder(
@@ -41,6 +57,11 @@ public class Deployer {
         }
     }
 
+    /**
+     * copy the given jarFile to every host at /tmp/ablicq/slave.jar
+     * create the directory if needed
+     * @param jarFile the jar file to deploy
+     */
     public void deploy(String jarFile){
         for (String host : hostsList){
             ProcessBuilder pb1 = new ProcessBuilder(
@@ -48,9 +69,7 @@ public class Deployer {
                     "-o", "UserKnownHostsFile=/dev/null",
                     "-o", "StrictHostKeyChecking=no",
                     "ablicq@"+host,
-                    "mkdir", "-p", "/tmp/ablicq",
-                    "&&",
-                    "hostname"
+                    "mkdir", "-p", "/tmp/ablicq"
             );
 
             ProcessBuilder pb2 = new ProcessBuilder(
@@ -76,7 +95,6 @@ public class Deployer {
 
     public static void main(String[] args) {
         Deployer deployer = new Deployer("config.txt");
-        deployer.runTest();
         deployer.deploy("/tmp/ablicq/SLAVE.jar");
     }
 }

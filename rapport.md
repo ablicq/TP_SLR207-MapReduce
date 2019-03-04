@@ -17,7 +17,7 @@ geometry: margin=2cm
 
 Exemple:\newline
 *Note: dans la suite, les lignes commençant par $ sont des commandes et les lignes suivantes en sont le résultat*
-```(bash)
+```bash
 $ nslookup c45-01
 
 Server:		137.194.2.16
@@ -29,7 +29,7 @@ Address: 137.194.34.192
 
 Avec mon ordinateur personel:
 
-```(bash)
+```bash
 $ nslookup pegASUS
 
 Server:		137.194.2.16
@@ -42,7 +42,7 @@ Ce qui signifie que mon ordinateur n'appartient à aucun domaine.
 
 11. En utilisant la commande `ifconfig` on obtient les addresses IP de l'ordinateur.
 
-```(bash)
+```bash
 $ ifconfig
 
 lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
@@ -71,7 +71,7 @@ On peut aussi avoir ces informations sur de nombreux sites internet comme *www.a
 
 14. on fait un ping sur un des ordinateurs de l'école et on obtient le résultat suivant:
 
-```(bash)
+```bash
 $ ping -c 10 c45-19
 
 PING c45-19.enst.fr (137.194.34.210) 56(84) bytes of data.
@@ -93,7 +93,7 @@ rtt min/avg/max/mdev = 1.174/3.372/4.966/1.144 ms
 
 16. pour faire de l'arithmetique, on peur par example utiliser `expr`, qui donne un résultat immédiat après un seul appui sur \<Entrée\>.
 
-```(bash)
+```bash
 $ expr 2 + 3
 5
 ```
@@ -108,7 +108,7 @@ $ expr 2 + 3
 # III- Fichiers locaux/distants
 
 19. On execute la commande suivante:
-```(bash)
+```bash
 $ cd && pwd
 /home/aurelien
 ```
@@ -116,7 +116,7 @@ $ cd && pwd
 20. La commande `echo bonjour > fperso.txt` permet de créer un fichier fperso.txt et d'y insérer le texte bonjour.
 
 21. La commande df permet d'afficher et d'avoir des informations sur la localisation du fichier indiqué.
-```(bash)
+```bash
 $ df fperso.txt
 Sys. de fichiers Taille Utilisé Dispo Uti% Monté sur
 /dev/sda1          915G     36G  832G   5% /home
@@ -126,7 +126,7 @@ Notre fichier est donc créé sur le disque dur de l'ordinateur.
 
 
 22. Après avoir créer un fichier contenant "some text", on éxécute les commandes:
-```(bash)
+```bash
 $ cat /tmp/aurelien/ftemp.txt
 some text
 
@@ -137,7 +137,7 @@ tmpfs                4023980   43828    3980152   2% /tmp
 Le système tmpfs (temporary file system) résidant dans la RAM, c'est là que notre fichier est stocké.
 
 23. On créé dans le répertoire personnel le fichier text.txt contenant "mon texte sur NFS".
-```(bash)
+```bash
 $ cat ~/text.txt
 mon texte sur NFS
 ```
@@ -161,7 +161,7 @@ Par example, la commande `scp /tmp/ablicq/local.txt ablicq@c128-26.enst.fr:/tmp/
 
 37. On implémente un thread ReadThread comme suit:
 
-```(java)
+```java
 public class ReadThread extends Thread {
 
     /**
@@ -215,3 +215,109 @@ public class ReadThread extends Thread {
     }
 }
 ```
+
+# VII- Deploy
+
+38. On commence par créer une classe Deployer dont le rôle sera de déployer les fichier slave.jar aux ordinateurs.\newline
+Cette classe possède deux méthodes: une pour tester la connextion aux hôtes indiqués, et une pour déployer un fichier jar passé en argument:
+
+```java
+public class Deployer {
+    /**
+     * the list of hosts indicated in the configuration file
+     */
+    ArrayList<String> hostsList = new ArrayList<>();
+
+    /**
+     * Constructor of the Deployer.
+     * Parse the given config file to the hostsList
+     * @param configFile the config file containing the hosts to which we wish to deploy
+     */
+    public Deployer(String configFile) {
+        parseHosts(configFile);
+    }
+
+    /**
+     * Parse the given config file to the hostsList
+     * @param configFile the config file containing the hosts to which we wish to deploy
+     */
+    private void parseHosts(String configFile){
+        // read the hosts list from the config file
+        try (Scanner in = new Scanner(new FileInputStream(configFile))) {
+            while (in.hasNextLine()){
+                String s = in.nextLine();
+                hostsList.add(s.split("\\s")[0]);
+            }
+        } catch (Exception e) { e.printStackTrace();}
+    }
+
+
+    /**
+     * Send the command 'hostname' to every host to test the connection
+     */
+    public void runTest(){
+        for(String host : hostsList){
+            ProcessBuilder pb = new ProcessBuilder(
+                    "ssh",
+                    "-o", "UserKnownHostsFile=/dev/null",
+                    "-o", "StrictHostKeyChecking=no",
+                    "ablicq@"+host,
+                    "hostname");
+
+            pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            pb.redirectError(ProcessBuilder.Redirect.INHERIT);
+
+            try {
+                Process p = pb.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * copy the given jarFile to every host at /tmp/ablicq/slave.jar
+     * create the directory if needed
+     * @param jarFile the jar file to deploy
+     */
+    public void deploy(String jarFile){
+        for (String host : hostsList){
+            ProcessBuilder pb1 = new ProcessBuilder(
+                    "ssh",
+                    "-o", "UserKnownHostsFile=/dev/null",
+                    "-o", "StrictHostKeyChecking=no",
+                    "ablicq@"+host,
+                    "mkdir", "-p", "/tmp/ablicq",
+            );
+
+            ProcessBuilder pb2 = new ProcessBuilder(
+                    "scp", jarFile, "ablicq@"+host+":/tmp/ablicq/slave.jar"
+            );
+
+            pb1.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            pb1.redirectError(ProcessBuilder.Redirect.INHERIT);
+
+            pb2.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            pb2.redirectError(ProcessBuilder.Redirect.INHERIT);
+
+            try {
+                Process p1 = pb1.start();
+                p1.waitFor();
+                pb2.start();
+
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Deployer deployer = new Deployer("config.txt");
+        deployer.runTest();
+        deployer.deploy("/tmp/ablicq/SLAVE.jar");
+    }
+}
+
+```
+
+Tel qu'écrit ci-dessus, le programme s'execute séquentiellement en raison du `p1.waitfor();` qui attend que le dossier soit créé avant d'y copier le fichier jar.
