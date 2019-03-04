@@ -39,6 +39,7 @@ public class ReadThread extends Thread {
         while (isRunning) {
             try {
                 if (in.available() > 0) {
+                    // parse the input as a character and not an integer
                     char read = (char) in.read();
                     queue.put(Character.toString(read));
                 }
