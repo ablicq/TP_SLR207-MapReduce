@@ -3,3 +3,5 @@ hadoop/data/
 hadoop/.idea/workspace.xml
 hadoop/.idea/usage.statistics.xml
 hadoop/.idea/tasks.xml
+
+init.sh
