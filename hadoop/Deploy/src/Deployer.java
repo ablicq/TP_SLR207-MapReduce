@@ -38,7 +38,7 @@ public class Deployer {
      * Send the command 'hostname' to every host to test the connection
      */
     public void runTest(){
-        for(String host : hostsList){
+        hostsList.parallelStream().forEach((host) -> {
             ProcessBuilder pb = new ProcessBuilder(
                     "ssh",
                     "-o", "UserKnownHostsFile=/dev/null",
@@ -54,7 +54,7 @@ public class Deployer {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+        });
     }
 
     /**
@@ -63,7 +63,7 @@ public class Deployer {
      * @param jarFile the jar file to deploy
      */
     public void deploy(String jarFile){
-        for (String host : hostsList){
+        hostsList.parallelStream().forEach((host) -> {
             ProcessBuilder pb1 = new ProcessBuilder(
                     "ssh",
                     "-o", "UserKnownHostsFile=/dev/null",
@@ -90,11 +90,12 @@ public class Deployer {
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
-        }
+        });
+
     }
 
     public static void main(String[] args) {
         Deployer deployer = new Deployer("config.txt");
-        deployer.deploy("/tmp/ablicq/SLAVE.jar");
+        deployer.deploy("/tmp/ablicq/slave.jar");
     }
 }
