@@ -321,3 +321,6 @@ public class Deployer {
 ```
 
 Tel qu'écrit ci-dessus, le programme s'execute séquentiellement en raison du `p1.waitfor();` qui attend que le dossier soit créé avant d'y copier le fichier jar.
+
+41. Cette question est très similaire à la précédente. Il faut cependant réccupérer les fichiers de splits individuellement car la notation `splits/*` du shell ne fonctionne pas avec les processBuilder.
+J'ai également utilisé parallelStream().forEach() qui permet d'effectuer des opération parallèles sur les éléments d'une collection.
