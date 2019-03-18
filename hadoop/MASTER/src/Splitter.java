@@ -1,15 +1,31 @@
-import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 
 public class Splitter {
     private ArrayList<String> hosts;
+    private HashMap<String, ArrayList<String>> assignments = new HashMap<>();
 
     public Splitter(ArrayList<String> hosts) {
         this.hosts = hosts;
     }
+
+
+    public void assignTasks(ArrayList<String> splits){
+        int nbHosts = hosts.size();
+        int nbSplits = splits.size();
+        for(int i = 0; i < nbSplits; ++i){
+            String h = hosts.get(i % nbHosts);
+            if(assignments.containsKey(h)) {
+                assignments.get(h).add(splits.get(i));
+            } else {
+                assignments.put(h, new ArrayList<String>(Collections.singleton(splits.get(i))));
+            }
+        }
+    }
+
 
     public void deploy(){
         hosts.parallelStream().forEach((host) -> {
@@ -22,16 +38,12 @@ public class Splitter {
                     "mkdir", "-p", "/tmp/ablicq/splits"
             );
 
-            // get the list of files in /tmp/ablicq/splits to be able to copy these with scp
-            File splitsFolder = new File("/tmp/ablicq/splits");
-            File[] splitFiles = splitsFolder.listFiles();
-            ArrayList<String> splits = new ArrayList<>();
-            Arrays.stream(splitFiles).forEach(file -> splits.add("/tmp/ablicq/splits/"+file.getName()));
 
             ArrayList<String> copyCmd = new ArrayList<>();
             copyCmd.add("scp");
-            copyCmd.addAll(splits);
+            copyCmd.addAll(assignments.get(host));
             copyCmd.add("ablicq@"+host+":/tmp/ablicq/splits/");
+
             ProcessBuilder scpPB = new ProcessBuilder(
                     copyCmd
             );
@@ -51,6 +63,31 @@ public class Splitter {
             }
         });
     }
+
+
+    public void runMaps(){
+        hosts.parallelStream().forEach(host ->{
+            String[] strings =  {"ssh",
+                    "-o", "UserKnownHostsFile=/dev/null",
+                    "-o", "StrictHostKeyChecking=no",
+                    "ablicq@"+host};
+            ArrayList<String> sshWrapper = new ArrayList<>(Arrays.asList(strings));
+            assignments.get(host).forEach(split ->{
+                String[] runSlaveCmd = {"java", "-jar", "/tmp/ablicq/slave.jar", "0", split};
+                ArrayList<String> cmd = new ArrayList<>(sshWrapper);
+                cmd.addAll(Arrays.asList(runSlaveCmd));
+                ProcessBuilder runMapBuilder = new ProcessBuilder(cmd);
+                try{
+                    Process runMapProcess = runMapBuilder.start();
+                    runMapProcess.waitFor();
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+                // TODO: use ReadThread to get output
+            });
+        });
+    }
+
 
     public static void main(String[] args) {
         Splitter splitter = new Splitter(new ArrayList<>(Arrays.asList(args)));
