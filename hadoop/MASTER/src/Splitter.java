@@ -10,6 +10,8 @@ public class Splitter {
 
     public Splitter(ArrayList<String> hosts) {
         this.hosts = hosts;
+        ArrayList<String> splits = new ArrayList<>(Arrays.asList("/tmp/ablicq/splits/S0.txt", "/tmp/ablicq/splits/S1.txt", "/tmp/ablicq/splits/S2.txt"));
+        assignTasks(splits);
     }
 
 
@@ -67,15 +69,13 @@ public class Splitter {
 
     public void runMaps(){
         hosts.parallelStream().forEach(host ->{
-            String[] strings =  {"ssh",
+            ArrayList<String> sshWrapper = new ArrayList<>(Arrays.asList("ssh",
                     "-o", "UserKnownHostsFile=/dev/null",
                     "-o", "StrictHostKeyChecking=no",
-                    "ablicq@"+host};
-            ArrayList<String> sshWrapper = new ArrayList<>(Arrays.asList(strings));
+                    "ablicq@"+host));
             assignments.get(host).forEach(split ->{
-                String[] runSlaveCmd = {"java", "-jar", "/tmp/ablicq/slave.jar", "0", split};
                 ArrayList<String> cmd = new ArrayList<>(sshWrapper);
-                cmd.addAll(Arrays.asList(runSlaveCmd));
+                cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "0", split));
                 ProcessBuilder runMapBuilder = new ProcessBuilder(cmd);
                 try{
                     Process runMapProcess = runMapBuilder.start();
@@ -92,5 +92,6 @@ public class Splitter {
     public static void main(String[] args) {
         Splitter splitter = new Splitter(new ArrayList<>(Arrays.asList(args)));
         splitter.deploy();
+        splitter.runMaps();
     }
 }
