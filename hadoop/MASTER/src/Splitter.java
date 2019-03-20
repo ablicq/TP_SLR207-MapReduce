@@ -1,8 +1,11 @@
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class Splitter {
     private ArrayList<String> hosts;
@@ -83,6 +86,7 @@ public class Splitter {
      * Tell each slave to do the map with the split it has been assigned to
      */
     public void runMaps(){
+        ArrayList<LinkedBlockingQueue<String>> queues = new ArrayList<>();
         hosts.parallelStream().forEach(host ->{
             ArrayList<String> sshWrapper = new ArrayList<>(Arrays.asList("ssh",
                     "-o", "UserKnownHostsFile=/dev/null",
@@ -93,12 +97,27 @@ public class Splitter {
                 cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "0", split));
                 ProcessBuilder runMapBuilder = new ProcessBuilder(cmd);
                 try{
+                    // Run the map
                     Process runMapProcess = runMapBuilder.start();
                     runMapProcess.waitFor();
+
+                    // prepare the output reading
+                    BufferedInputStream pStd = new BufferedInputStream(runMapProcess.getInputStream());
+                    LinkedBlockingQueue<String> stdTimeOutQueue = new LinkedBlockingQueue<>();
+                    ReadThread readStd = new ReadThread(pStd, stdTimeOutQueue);
+                    readStd.start();
+
+                    // read the output
+                    String val = "";
+                    while(val != null)
+                    {
+                        System.out.print(val);
+                        val = stdTimeOutQueue.poll(10000, TimeUnit.MILLISECONDS);
+                    }
+                    readStd.stopRun();
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
-                // TODO: use ReadThread to get output
             });
         });
     }
