@@ -4,4 +4,5 @@ hadoop/.idea/workspace.xml
 hadoop/.idea/usage.statistics.xml
 hadoop/.idea/tasks.xml
 
+slaves.conf
 init.sh

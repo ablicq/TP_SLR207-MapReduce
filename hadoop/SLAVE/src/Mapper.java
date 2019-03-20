@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.HashSet;
 import java.util.Scanner;
 
 public class Mapper {
@@ -12,9 +13,15 @@ public class Mapper {
     private static void count(String inFile, String outFile) throws FileNotFoundException {
         Scanner in = new Scanner(new File(inFile));
         PrintWriter out = new PrintWriter(outFile);
+        HashSet<String> uniqueKeys = new HashSet<>();
         while (in.hasNext()){
             String word = in.next();
+            uniqueKeys.add(word);
             out.println(word + " 1");
+        }
+        // send the unique keys to the master through the standard output
+        for(String word : uniqueKeys){
+            System.out.println(word);
         }
         in.close();
         out.close();
@@ -59,6 +66,6 @@ public class Mapper {
     }
 
     public static void main(String[] args) {
-        map("/tmp/ablicq/splits/S0.txt");
+        map("/tmp/ablicq/splits/S2.txt");
     }
 }
