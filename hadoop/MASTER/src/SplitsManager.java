@@ -11,7 +11,8 @@ public class SplitsManager {
     private String splitsLoc = "/tmp/ablicq/splits";
     private String mapsLoc = "/tmp/ablicq/maps";
     private Integer nbSplits = 3;
-    private HashMap<String, ArrayList<Integer>> keyHostMap = new HashMap<>();
+    private HashMap<String, ArrayList<Integer>> keySplitMap = new HashMap<>();
+    private HashMap<Integer, String> splitHostMap = new HashMap<>();
 
 
     /**
@@ -20,7 +21,6 @@ public class SplitsManager {
      */
     public SplitsManager(ArrayList<String> hosts) {
         this.hosts = hosts;
-        ArrayList<String> splits = new ArrayList<>(Arrays.asList("/tmp/ablicq/splits/S0.txt", "/tmp/ablicq/splits/S1.txt", "/tmp/ablicq/splits/S2.txt"));
         assignTasks();
     }
 
@@ -31,7 +31,6 @@ public class SplitsManager {
      */
     public SplitsManager(String configFile){
         parseHosts(configFile);
-        ArrayList<String> splits = new ArrayList<>(Arrays.asList("/tmp/ablicq/splits/S0.txt", "/tmp/ablicq/splits/S1.txt", "/tmp/ablicq/splits/S2.txt"));
         assignTasks();
     }
 
@@ -71,6 +70,7 @@ public class SplitsManager {
             } else {
                 assignments.put(h, new ArrayList<>(Collections.singleton(i)));
             }
+            splitHostMap.put(i, h);
         }
     }
 
@@ -149,10 +149,10 @@ public class SplitsManager {
                     while(val != null)
                     {
                         if (val.equals("\n")) {
-                            if(keyHostMap.containsKey(key)) {
-                                keyHostMap.get(key).add(split);
+                            if(keySplitMap.containsKey(key)) {
+                                keySplitMap.get(key).add(split);
                             } else {
-                                keyHostMap.put(key, new ArrayList<>(Collections.singleton(split)));
+                                keySplitMap.put(key, new ArrayList<>(Collections.singleton(split)));
                             }
                             key = "";
                         } else {
@@ -167,7 +167,13 @@ public class SplitsManager {
                 }
             });
         });
-        keyHostMap.forEach((key, value) -> {System.out.print(key + ": "); value.forEach(i -> System.out.print(i + " ")); System.out.print("\n");});
+        System.out.println("=====================================");
+        System.out.println("Map phase finished");
+        System.out.println("key -> splits:");
+        keySplitMap.forEach((key, value) -> {System.out.print(key + " -> "); value.forEach(i -> System.out.print(i + " ")); System.out.print("\n");});
+        System.out.println("split -> host:");
+        splitHostMap.forEach((key, value) -> System.out.println(key + " -> " + value));
+        System.out.println("=====================================");
     }
 
 
