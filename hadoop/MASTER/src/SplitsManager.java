@@ -1,41 +1,75 @@
 import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-public class Splitter {
-    private ArrayList<String> hosts;
-    private HashMap<String, ArrayList<String>> assignments = new HashMap<>();
+public class SplitsManager {
+    private ArrayList<String> hosts = new ArrayList<>();
+    private HashMap<String, ArrayList<Integer>> assignments = new HashMap<>();
+    private String splitsLoc = "/tmp/ablicq/splits";
+    private String mapsLoc = "/tmp/ablicq/maps";
+    private Integer nbSplits = 3;
+    private HashMap<String, ArrayList<Integer>> keyHostMap = new HashMap<>();
 
 
     /**
      * Generate the splits (TODO), assign slaves to the splits, deploy the splits to the slaves, and order the maps to run
      * @param hosts the hosts of the slave machines
      */
-    public Splitter(ArrayList<String> hosts) {
+    public SplitsManager(ArrayList<String> hosts) {
         this.hosts = hosts;
         ArrayList<String> splits = new ArrayList<>(Arrays.asList("/tmp/ablicq/splits/S0.txt", "/tmp/ablicq/splits/S1.txt", "/tmp/ablicq/splits/S2.txt"));
-        assignTasks(splits);
+        assignTasks();
+    }
+
+
+    /**
+     * Generate the splits (TODO), assign slaves to the splits, deploy the splits to the slaves, and order the maps to run
+     * @param configFile a path to a file containing the hostnames of the slaves
+     */
+    public SplitsManager(String configFile){
+        parseHosts(configFile);
+        ArrayList<String> splits = new ArrayList<>(Arrays.asList("/tmp/ablicq/splits/S0.txt", "/tmp/ablicq/splits/S1.txt", "/tmp/ablicq/splits/S2.txt"));
+        assignTasks();
+    }
+
+
+    private String splitNoToLoc(Integer splitNo) {
+        return splitsLoc + "/S" + splitNo + ".txt";
+    }
+
+    private String mapNoToLoc(Integer mapNo) {
+        return mapsLoc + "/UM" + mapNo + ".txt";
+    }
+
+    /**
+     * Parse the given config file to the hosts list
+     * @param configFile the config file containing the hosts to which we wish to deploy
+     */
+    private void parseHosts(String configFile) {
+        // read the hosts list from the config file
+        try (Scanner in = new Scanner(new FileInputStream(configFile))) {
+            while (in.hasNextLine()){
+                String s = in.nextLine();
+                hosts.add(s.split("\\s")[0]);
+            }
+        } catch (Exception e) { e.printStackTrace();}
     }
 
 
     /**
      * Assign each split to a host that will have to process it for the map phase
-     * @param splits the paths to the splits to be assigned
      */
-    private void assignTasks(ArrayList<String> splits){
+    private void assignTasks(){
         int nbHosts = hosts.size();
-        int nbSplits = splits.size();
         for(int i = 0; i < nbSplits; ++i){
             String h = hosts.get(i % nbHosts);
             if(assignments.containsKey(h)) {
-                assignments.get(h).add(splits.get(i));
+                assignments.get(h).add(i);
             } else {
-                assignments.put(h, new ArrayList<String>(Collections.singleton(splits.get(i))));
+                assignments.put(h, new ArrayList<>(Collections.singleton(i)));
             }
         }
     }
@@ -56,9 +90,11 @@ public class Splitter {
             );
 
 
+            var splitLocs = new ArrayList<String>();
+            assignments.get(host).forEach(i -> splitLocs.add(splitNoToLoc(i)));
             ArrayList<String> copyCmd = new ArrayList<>();
             copyCmd.add("scp");
-            copyCmd.addAll(assignments.get(host));
+            copyCmd.addAll(splitLocs);
             copyCmd.add("ablicq@"+host+":/tmp/ablicq/splits/");
 
             ProcessBuilder scpPB = new ProcessBuilder(
@@ -94,7 +130,7 @@ public class Splitter {
                     "ablicq@"+host));
             assignments.get(host).forEach(split ->{
                 ArrayList<String> cmd = new ArrayList<>(sshWrapper);
-                cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "0", split));
+                cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "0", splitNoToLoc(split)));
                 ProcessBuilder runMapBuilder = new ProcessBuilder(cmd);
                 try{
                     // Run the map
@@ -109,10 +145,21 @@ public class Splitter {
 
                     // read the output
                     String val = "";
+                    String key = "";
                     while(val != null)
                     {
-                        System.out.print(val);
-                        val = stdTimeOutQueue.poll(10000, TimeUnit.MILLISECONDS);
+                        if (val.equals("\n")) {
+                            if(keyHostMap.containsKey(key)) {
+                                keyHostMap.get(key).add(split);
+                            } else {
+                                keyHostMap.put(key, new ArrayList<>(Collections.singleton(split)));
+                            }
+                            key = "";
+                        } else {
+                            key += val;
+                        }
+                        //System.out.print(val);
+                        val = stdTimeOutQueue.poll(1000, TimeUnit.MILLISECONDS);
                     }
                     readStd.stopRun();
                 } catch (IOException | InterruptedException e) {
@@ -120,12 +167,13 @@ public class Splitter {
                 }
             });
         });
+        keyHostMap.forEach((key, value) -> {System.out.print(key + ": "); value.forEach(i -> System.out.print(i + " ")); System.out.print("\n");});
     }
 
 
     public static void main(String[] args) {
-        Splitter splitter = new Splitter(new ArrayList<>(Arrays.asList(args)));
-        splitter.deploy();
-        splitter.runMaps();
+        SplitsManager splitsManager = new SplitsManager(args[0]);
+        splitsManager.deploy();
+        splitsManager.runMaps();
     }
 }
