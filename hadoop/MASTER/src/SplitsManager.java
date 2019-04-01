@@ -11,12 +11,15 @@ public class SplitsManager {
     private String splitsLoc = "/tmp/ablicq/splits";
     private String mapsLoc = "/tmp/ablicq/maps";
     private Integer nbSplits = 3;
+
     private HashMap<String, ArrayList<Integer>> keySplitMap = new HashMap<>();
     private HashMap<Integer, String> splitHostMap = new HashMap<>();
+    private HashMap<String, HashSet<Integer>> mapAssignments = new HashMap<>();
+    private HashMap<String, HashSet<Integer>> filesOnHost = new HashMap<>();
 
 
     /**
-     * Generate the splits (TODO), assign slaves to the splits, deploy the splits to the slaves, and order the maps to run
+     * Assign slaves to the splits, deploy the splits to the slaves, and order the maps to run
      * @param hosts the hosts of the slave machines
      */
     public SplitsManager(ArrayList<String> hosts) {
@@ -26,7 +29,7 @@ public class SplitsManager {
 
 
     /**
-     * Generate the splits (TODO), assign slaves to the splits, deploy the splits to the slaves, and order the maps to run
+     * Assign slaves to the splits, deploy the splits to the slaves, and order the maps to run
      * @param configFile a path to a file containing the hostnames of the slaves
      */
     public SplitsManager(String configFile){
@@ -176,6 +179,34 @@ public class SplitsManager {
         System.out.println("=====================================");
     }
 
+
+    /**
+     * Find a way to assign the reduce tasks to the hosts in a way that minimize the assignment complexity
+     */
+    public void shuffle(){
+
+    }
+
+    private void assign(String key, String host){
+
+    }
+
+    /**
+     * Compute the complexity to assign the reducing of some key to some host.
+     * it is computed as the number of tasks already assigned to the host plus
+     * The number of files to transfer to the host to be able to reduce the key.
+     * @param key the key to be assigned
+     * @param host the host to which assign the key
+     * @return the total complexity
+     */
+    private int assignmentComplexity(String key, String host) {
+        int hostBusiness = mapAssignments.getOrDefault(host, new HashSet<>()).size();
+        int nbFilesToTransfer = 0;
+        for (Integer map : keySplitMap.get(key)) {
+            nbFilesToTransfer += splitHostMap.get(map).equals(host) ? 0 : 1;
+        }
+        return hostBusiness + nbFilesToTransfer;
+    }
 
     public static void main(String[] args) {
         SplitsManager splitsManager = new SplitsManager(args[0]);
