@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
 
@@ -64,6 +65,30 @@ public class Mapper {
             e.printStackTrace();
         }
     }
+
+    public static void sortMaps(String key, String outNo, ArrayList<String> maps) {
+        try(PrintWriter outPrinter = outNoToFile(outNo)){
+            for(String m : maps) {
+                try(BufferedReader mapReader = mapNoToFile((m))){
+                    mapReader.lines().forEach(l->{
+                        if(l.contains(key))
+                            outPrinter.println(l);
+                    });
+                } catch (FileNotFoundException e) { e.printStackTrace(); }
+            }
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    private static BufferedReader mapNoToFile(String mapNo) throws FileNotFoundException {
+        String mapFile = "/tmp/ablicq/maps/UM" + mapNo + ".txt";
+        return new BufferedReader(new FileReader(mapFile));
+    }
+
+    private static PrintWriter outNoToFile(String outNo) throws IOException {
+        String outFile = "/tmp/ablicq/maps/SM" + outNo + ".txt";
+        return new PrintWriter(new FileWriter(outFile));
+    }
+
 
     public static void main(String[] args) {
         map("/tmp/ablicq/splits/S2.txt");
