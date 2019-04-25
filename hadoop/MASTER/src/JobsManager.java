@@ -321,6 +321,26 @@ public class JobsManager {
         });
     }
 
+    public void runReduce(){
+        hosts.parallelStream().forEach(host ->{
+            ArrayList<String> sshWrapper = new ArrayList<>(Arrays.asList("ssh",
+                    "-o", "UserKnownHostsFile=/dev/null",
+                    "-o", "StrictHostKeyChecking=no",
+                    "ablicq@"+host));
+            mapAssignments.get(host).forEach(key->{
+                ArrayList<String> cmd = new ArrayList<>(sshWrapper);
+                cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "2", key, keyId.get(key).toString()));
+                ProcessBuilder runReduceBuilder = new ProcessBuilder(cmd);
+                try{
+                    Process runMapProcess=runReduceBuilder.start();
+                    runMapProcess.waitFor();
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+        });
+    }
+
     public static void main(String[] args) {
         JobsManager jobsManager = new JobsManager(args[0]);
         jobsManager.deploySplits();
@@ -328,5 +348,6 @@ public class JobsManager {
         jobsManager.shuffle();
         jobsManager.tranferMaps();
         jobsManager.runSortMaps();
+        jobsManager.runReduce();
     }
 }
