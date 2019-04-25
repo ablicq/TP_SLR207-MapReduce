@@ -348,6 +348,36 @@ public class JobsManager {
         });
     }
 
+    public void fetchResults(){
+        System.out.println("=====================================");
+        System.out.println("Final Results:");
+        hosts.parallelStream().forEach(host ->{
+            ProcessBuilder catPB = new ProcessBuilder("ssh",
+                    "-o", "UserKnownHostsFile=/dev/null",
+                    "-o", "StrictHostKeyChecking=no",
+                    "ablicq@"+host,
+                    "cat", "/tmp/ablicq/reduces/*");
+            try {
+                Process catP = catPB.start();
+
+                BufferedInputStream pStd = new BufferedInputStream(catP.getInputStream());
+                LinkedBlockingQueue<String> stdTimeOutQueue = new LinkedBlockingQueue<>();
+                ReadThread readStd = new ReadThread(pStd, stdTimeOutQueue);
+                readStd.start();
+
+                String val = "";
+                while(val != null)
+                {
+                    System.out.print(val);
+                    val = stdTimeOutQueue.poll(1000, TimeUnit.MILLISECONDS);
+                }
+                readStd.stopRun();
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     public static void main(String[] args) {
         JobsManager jobsManager = new JobsManager(args[0]);
         jobsManager.deploySplits();
@@ -356,5 +386,6 @@ public class JobsManager {
         jobsManager.tranferMaps();
         jobsManager.runSortMaps();
         jobsManager.runReduce();
+        jobsManager.fetchResults();
     }
 }
