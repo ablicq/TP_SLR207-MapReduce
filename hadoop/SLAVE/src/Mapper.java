@@ -69,24 +69,27 @@ public class Mapper {
     public static void sortMaps(String key, String outNo, ArrayList<String> maps) {
         try(PrintWriter outPrinter = outNoToFile(outNo)){
             for(String m : maps) {
-                try(BufferedReader mapReader = mapNoToFile((m))){
-                    mapReader.lines().forEach(l->{
+                System.out.println(m);
+                System.out.println(mapNoToFile(m));
+                try(Scanner mapReader = mapNoToFile(m)){
+                    while(mapReader.hasNextLine()){
+                        String l = mapReader.nextLine();
                         if(l.contains(key))
                             outPrinter.println(l);
-                    });
+                    }
                 } catch (FileNotFoundException e) { e.printStackTrace(); }
             }
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    private static BufferedReader mapNoToFile(String mapNo) throws FileNotFoundException {
+    private static Scanner mapNoToFile(String mapNo) throws FileNotFoundException {
         String mapFile = "/tmp/ablicq/maps/UM" + mapNo + ".txt";
-        return new BufferedReader(new FileReader(mapFile));
+        return new Scanner(new File(mapFile));
     }
 
     private static PrintWriter outNoToFile(String outNo) throws IOException {
         String outFile = "/tmp/ablicq/maps/SM" + outNo + ".txt";
-        return new PrintWriter(new FileWriter(outFile));
+        return new PrintWriter(outFile);
     }
 
 

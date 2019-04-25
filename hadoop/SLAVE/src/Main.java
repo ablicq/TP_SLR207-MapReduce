@@ -15,7 +15,7 @@ public class Main {
             case 1: // unsorted maps to sorted maps
                 String mapKey = args[1];
                 String outNo = args[2];
-                ArrayList<String> maps = new ArrayList<>(Arrays.asList(args).subList(2, args.length -1));
+                ArrayList<String> maps = new ArrayList<>(Arrays.asList(args).subList(3, args.length));
                 Mapper.sortMaps(mapKey, outNo, maps);
                 break;
             case 2: // sorted maps to reduced maps

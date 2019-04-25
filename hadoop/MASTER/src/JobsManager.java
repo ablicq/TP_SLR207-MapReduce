@@ -197,7 +197,7 @@ public class JobsManager {
     //******************************************************************************************************************
 
     /**
-     * Assign the reduce tasks to the hosts for the reduce phase in a way that minimize the assignment complexity
+     * Assign the reduce tasks to the hosts for the reduce phase in a way that minimizes the assignment complexity
      */
     public void shuffle(){
         // for each key, look for the host minimizing the assignment complexity
@@ -216,7 +216,10 @@ public class JobsManager {
         });
 
         // print for debug
+        System.out.println("Shuffle phase finished");
+        System.out.println("Assignments:");
         mapAssignments.forEach((h, k) -> System.out.println(h + " -> " + k));
+        System.out.println("File transfers");
         filesToTransfer.forEach((key, value) -> {System.out.print(key + " -> "); value.forEach(i -> System.out.print(i + " ")); System.out.print("\n");});
     }
 
@@ -275,6 +278,9 @@ public class JobsManager {
     //******************************************************************************************************************
 
 
+    /**
+     * Assign a unique id to each key
+     */
     private void genKeyIds() {
         int cpt = 0;
         for(String k :keySplitMap.keySet()){
@@ -291,8 +297,8 @@ public class JobsManager {
                     String dest = host + ":" + mapNoToLoc(splitNo);
                     ProcessBuilder transferPB = new ProcessBuilder("scp", "ablicq@"+src, "ablicq@"+dest);
                     try {
-                        transferPB.start();
-                    } catch (IOException e) {
+                        transferPB.start().waitFor();
+                    } catch (IOException | InterruptedException e) {
                         e.printStackTrace();
                     }
                 })
@@ -309,6 +315,7 @@ public class JobsManager {
                 ArrayList<String> cmd = new ArrayList<>(sshWrapper);
                 cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "1", key, keyId.get(key).toString()));
                 keySplitMap.get(key).stream().map(Object::toString).forEach(cmd::add);
+                //cmd.forEach(System.out::println);
                 ProcessBuilder runMapBuilder = new ProcessBuilder(cmd);
                 try{
                     // Run the map
