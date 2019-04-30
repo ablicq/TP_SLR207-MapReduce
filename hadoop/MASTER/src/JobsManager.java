@@ -31,7 +31,7 @@ public class JobsManager {
 
 
     /**
-     * Assign slaves to the splits, deploySpldeployits the splits to the slaves, and order the maps to run
+     * Assign slaves to the splits, deploy the splits to the slaves, and order the maps to run
      * @param configFile a path to a file containing the hostnames of the slaves
      */
     public JobsManager(String configFile){
@@ -144,7 +144,7 @@ public class JobsManager {
                     "ablicq@"+host));
             splitAssignments.get(host).forEach(split ->{
                 ArrayList<String> cmd = new ArrayList<>(sshWrapper);
-                cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "0", splitNoToLoc(split)));
+                cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "0", split.toString()));
                 ProcessBuilder runMapBuilder = new ProcessBuilder(cmd);
                 try{
                     // Run the map

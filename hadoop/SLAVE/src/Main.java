@@ -9,8 +9,8 @@ public class Main {
         // apply the desired function
         switch (mode){
             case 0: // splits to unsorted maps
-                String inFile = args[1];
-                Mapper.map(inFile);
+                String splitNo = args[1];
+                Mapper.map(splitNo);
                 break;
             case 1: // unsorted maps to sorted maps
                 String mapKey = args[1];
