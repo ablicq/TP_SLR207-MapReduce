@@ -1,3 +1,5 @@
+package map_reduce;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,7 +25,7 @@ public class Reducer {
     /**
      * Run the entire reduce phase.
      * <ul>
-     *     <li>Assign the maps to the slaves (see Shuffler#shuffle)</li>
+     *     <li>Assign the maps to the slaves (see map_reduce.Shuffler#shuffle)</li>
      *     <li>Transfer the maps between the slaves</li>
      *     <li>Order the slaves to sort the maps</li>
      *     <li>Order the slaves to reduce the maps</li>

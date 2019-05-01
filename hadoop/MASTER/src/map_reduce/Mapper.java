@@ -1,3 +1,5 @@
+package map_reduce;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.ArrayList;

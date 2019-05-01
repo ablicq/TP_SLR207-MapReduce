@@ -1,3 +1,5 @@
+package map_reduce;
+
 import java.io.BufferedInputStream;
 import java.util.concurrent.LinkedBlockingQueue;
 

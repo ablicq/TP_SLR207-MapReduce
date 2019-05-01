@@ -1,3 +1,5 @@
+package map_reduce;
+
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -12,7 +14,7 @@ public class JobsManager {
     private Reducer reducer;
 
     /**
-     * Create a new JobsManager, managing the jobs of the given hosts, and the given splits
+     * Create a new map_reduce.JobsManager, managing the jobs of the given hosts, and the given splits
      * @param hosts the hosts of the slave machines
      * @param nbSplits the number of splits to be processed
      */
@@ -23,7 +25,7 @@ public class JobsManager {
 
 
     /**
-     * Create a new JobsManager, managing the jobs of the given hosts, and the given splits
+     * Create a new map_reduce.JobsManager, managing the jobs of the given hosts, and the given splits
      * @param configFile a path to a file containing the hostnames of the slaves
      * @param nbSplits the number of splits to be processed
      */
