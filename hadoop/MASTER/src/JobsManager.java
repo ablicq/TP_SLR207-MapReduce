@@ -12,8 +12,9 @@ public class JobsManager {
     private Reducer reducer;
 
     /**
-     * Assign slaves to the splits, deploySplits the splits to the slaves, and order the maps to run
+     * Create a new JobsManager, managing the jobs of the given hosts, and the given splits
      * @param hosts the hosts of the slave machines
+     * @param nbSplits the number of splits to be processed
      */
     public JobsManager(ArrayList<String> hosts, int nbSplits) {
         this.hosts = hosts;
@@ -22,8 +23,9 @@ public class JobsManager {
 
 
     /**
-     * Assign slaves to the splits, deploy the splits to the slaves, and order the maps to run
+     * Create a new JobsManager, managing the jobs of the given hosts, and the given splits
      * @param configFile a path to a file containing the hostnames of the slaves
+     * @param nbSplits the number of splits to be processed
      */
     public JobsManager(String configFile, int nbSplits){
         parseHosts(configFile);
@@ -39,11 +41,16 @@ public class JobsManager {
         try (Scanner in = new Scanner(new FileInputStream(configFile))) {
             while (in.hasNextLine()){
                 String s = in.nextLine();
-                hosts.add(s.split("\\s")[0]);
+                // ignore blank lines and comments
+                if(!s.matches("\\s*|#.*"))
+                    hosts.add(s.split("\\s")[0]);
             }
         } catch (Exception e) { e.printStackTrace();}
     }
 
+    /**
+     * Run the entire Map-Reduce algorithm
+     */
     public void runAll(){
         mapper.map();
         Shuffler shuffler = new Shuffler(hosts, mapper.getKeySplitMap(), mapper.getSplitAssignments());
@@ -52,15 +59,17 @@ public class JobsManager {
     }
 
 
-    public void fetchResults(){
-        System.out.println("=====================================");
-        System.out.println("Final Results:");
-        hosts.parallelStream().forEach(host ->{
-            ProcessBuilder catPB = new ProcessBuilder("ssh",
-                    "-o", "UserKnownHostsFile=/dev/null",
-                    "-o", "StrictHostKeyChecking=no",
-                    "ablicq@"+host,
-                    "cat", "/tmp/ablicq/reduces/*");
+    /**
+     * Fetch the results from the slaves
+     * @return A HashMap containing the word count
+     */
+    public HashMap<String, Integer> fetchResults(){
+        HashMap<String, Integer> ret = new HashMap<>();
+        hosts.parallelStream().map(host -> new ProcessBuilder("ssh",
+                "-o", "UserKnownHostsFile=/dev/null",
+                "-o", "StrictHostKeyChecking=no",
+                "ablicq@" + host,
+                "cat", "/tmp/ablicq/reduces/*")).forEach(catPB -> {
             try {
                 Process catP = catPB.start();
 
@@ -70,9 +79,15 @@ public class JobsManager {
                 readStd.start();
 
                 String val = "";
-                while(val != null)
-                {
-                    System.out.print(val);
+                String l = "";
+                while (val != null) {
+                    if (val.equals("\n")) {
+                        String[] a = l.split("\\s");
+                        ret.put(a[0], Integer.parseInt(a[1]));
+                        l = "";
+                    } else {
+                        l += val;
+                    }
                     val = stdTimeOutQueue.poll(1000, TimeUnit.MILLISECONDS);
                 }
                 readStd.stopRun();
@@ -80,5 +95,6 @@ public class JobsManager {
                 e.printStackTrace();
             }
         });
+        return ret;
     }
 }

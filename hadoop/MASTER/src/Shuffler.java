@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class Shuffler {
+
     private ArrayList<String> hosts;
     private HashMap<String, ArrayList<Integer>> keySplitMap;
     private HashMap<String, ArrayList<Integer>> splitAssignments;
@@ -25,6 +26,7 @@ public class Shuffler {
     public HashMap<String, HashSet<Integer>> getFilesToTransfer() {
         return filesToTransfer;
     }
+
 
     /**
      * Assign the reduce tasks to the hosts for the reduce phase in a way that minimizes the assignment complexity

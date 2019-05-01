@@ -6,11 +6,11 @@ import java.util.HashMap;
 public class Reducer {
     private ArrayList<String> hosts;
     private Shuffler shuffler;
+    private HashMap<String, ArrayList<Integer>> keySplitMap;
+    private HashMap<Integer, String> splitHostMap;
 
     private HashMap<String, Integer> keyId = new HashMap<>();
 
-    private HashMap<String, ArrayList<Integer>> keySplitMap;
-    private HashMap<Integer, String> splitHostMap;
 
     public Reducer(ArrayList<String> hosts, Shuffler shuffler, HashMap<String, ArrayList<Integer>> keySplitMap, HashMap<Integer, String> splitHostMap) {
         this.hosts = hosts;
@@ -19,6 +19,16 @@ public class Reducer {
         this.splitHostMap = splitHostMap;
     }
 
+
+    /**
+     * Run the entire reduce phase.
+     * <ul>
+     *     <li>Assign the maps to the slaves (see Shuffler#shuffle)</li>
+     *     <li>Transfer the maps between the slaves</li>
+     *     <li>Order the slaves to sort the maps</li>
+     *     <li>Order the slaves to reduce the maps</li>
+     * </ul>
+     */
     public void reduce(){
         this.shuffler.shuffle();
         this.genKeyIds();
