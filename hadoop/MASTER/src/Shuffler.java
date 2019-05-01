@@ -4,16 +4,26 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class Shuffler {
-    private ArrayList<String> hosts = new ArrayList<>();
+    private ArrayList<String> hosts;
+    private HashMap<String, ArrayList<Integer>> keySplitMap;
+    private HashMap<String, ArrayList<Integer>> splitAssignments;
+
     private HashMap<String, ArrayList<String>> mapAssignments = new HashMap<>();
     private HashMap<String, HashSet<Integer>> filesToTransfer = new HashMap<>();
-    private HashMap<String, ArrayList<Integer>> keySplitMap = new HashMap<>();
-    private HashMap<String, ArrayList<Integer>> splitAssignments = new HashMap<>();
+
 
     public Shuffler(ArrayList<String> hosts, HashMap<String, ArrayList<Integer>> keySplitMap, HashMap<String, ArrayList<Integer>> splitAssignments) {
         this.hosts = hosts;
         this.keySplitMap = keySplitMap;
         this.splitAssignments = splitAssignments;
+    }
+
+    public HashMap<String, ArrayList<String>> getMapAssignments() {
+        return mapAssignments;
+    }
+
+    public HashMap<String, HashSet<Integer>> getFilesToTransfer() {
+        return filesToTransfer;
     }
 
     /**

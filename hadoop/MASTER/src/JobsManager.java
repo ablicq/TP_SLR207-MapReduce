@@ -7,16 +7,9 @@ import java.util.concurrent.TimeUnit;
 
 public class JobsManager {
     private ArrayList<String> hosts = new ArrayList<>();
-    private String splitsLoc = "/tmp/ablicq/splits";
-    private String mapsLoc = "/tmp/ablicq/maps";
-    private String reducesLoc = "/tmp/ablicq/reduces";
 
     private Mapper mapper;
-
-    private HashMap<String, ArrayList<String>> mapAssignments = new HashMap<>();
-    private HashMap<String, HashSet<Integer>> filesToTransfer = new HashMap<>();
-
-    private HashMap<String, Integer> keyId = new HashMap<>();
+    private Reducer reducer;
 
     /**
      * Assign slaves to the splits, deploySplits the splits to the slaves, and order the maps to run
@@ -37,20 +30,6 @@ public class JobsManager {
         this.mapper = new Mapper(hosts, nbSplits);
     }
 
-
-    private String mapNoToLoc(Integer mapNo) {
-        return mapsLoc + "/UM" + mapNo + ".txt";
-    }
-
-    private String smNoToLoc(Integer smNo) {
-        return mapsLoc + "/SM" + smNo + ".txt";
-    }
-
-    private String reduceNoToLoc(Integer reduceNo){
-        return reducesLoc + "/R" + reduceNo + ".txt";
-    }
-
-
     /**
      * Parse the given config file to the hosts list
      * @param configFile the config file containing the hosts to which we wish to deploySplits
@@ -67,165 +46,11 @@ public class JobsManager {
 
     public void runAll(){
         mapper.map();
+        Shuffler shuffler = new Shuffler(hosts, mapper.getKeySplitMap(), mapper.getSplitAssignments());
+        reducer = new Reducer(hosts, shuffler, mapper.getKeySplitMap(), mapper.getSplitHostMap());
+        reducer.reduce();
     }
 
-    //******************************************************************************************************************
-    //******************************************************************************************************************
-    //                                        methods for the SHUFFLE phase
-    //******************************************************************************************************************
-    //******************************************************************************************************************
-
-    /**
-     * Assign the reduce tasks to the hosts for the reduce phase in a way that minimizes the assignment complexity
-     */
-    public void shuffle(){
-        // for each key, look for the host minimizing the assignment complexity
-        // and assign the key to this host
-        keySplitMap.keySet().forEach(key->{
-            String host = hosts.get(0);
-            int minVal = assignmentComplexity(key, host);
-            for(String h : hosts){
-                int otherVal = assignmentComplexity(key, h);
-                if(minVal > otherVal){
-                    minVal = otherVal;
-                    host = h;
-                }
-            }
-            assignMap(key, host);
-        });
-
-        // print for debug
-        System.out.println("Shuffle phase finished");
-        System.out.println("Assignments:");
-        mapAssignments.forEach((h, k) -> System.out.println(h + " -> " + k));
-        System.out.println("File transfers");
-        filesToTransfer.forEach((key, value) -> {System.out.print(key + " -> "); value.forEach(i -> System.out.print(i + " ")); System.out.print("\n");});
-    }
-
-    /**
-     * Assign a key to a host for the reduce phase.
-     * Add the key to the list of assignments to the host and
-     * update the set of files to send to the host
-     * @param key the key to assign
-     * @param host the host to which the key is assigned
-     */
-    private void assignMap(String key, String host){
-        // add the key to the assignments of the host
-        if(!mapAssignments.containsKey(host)){
-            mapAssignments.put(host, new ArrayList<>(Collections.singleton(key)));
-        } else {
-            mapAssignments.get(host).add(key);
-        }
-        // add the files to transfer to the host in the set
-        for(int mapNo : keySplitMap.get(key)){
-            if(!splitAssignments.get(host).contains(mapNo)){
-                // add the file to the set of files to transfer
-                if(!filesToTransfer.containsKey(host)){
-                    filesToTransfer.put(host, new HashSet<>(Collections.singleton(mapNo)));
-                } else {
-                    filesToTransfer.get(host).add(mapNo);
-                }
-            }
-        }
-    }
-
-    /**
-     * Compute the complexity to assign the reducing of some key to some host.
-     * it is computed as the number of tasks already assigned to the host plus
-     * The number of files to transfer to the host to be able to reduce the key.
-     * @param key the key to be assigned
-     * @param host the host to which assign the key
-     * @return the total complexity
-     */
-    private int assignmentComplexity(String key, String host) {
-        int hostBusiness = mapAssignments.containsKey(host) ? mapAssignments.get(host).size() : 0;
-        int nbFilesToTransfer = 0;
-        for (Integer mapNo : keySplitMap.get(key)) {
-            if(!splitAssignments.get(host).contains(mapNo) &&
-                    !filesToTransfer.getOrDefault(host, new HashSet<>()).contains(mapNo)){
-                nbFilesToTransfer++;
-            }
-        }
-        return hostBusiness + nbFilesToTransfer;
-    }
-
-
-    //******************************************************************************************************************
-    //******************************************************************************************************************
-    //                                        methods for the REDUCE phase
-    //******************************************************************************************************************
-    //******************************************************************************************************************
-
-
-    /**
-     * Assign a unique id to each key
-     */
-    private void genKeyIds() {
-        int cpt = 0;
-        for(String k :keySplitMap.keySet()){
-            keyId.put(k, cpt);
-            cpt++;
-        }
-    }
-
-    public void tranferMaps(){
-        genKeyIds();
-        hosts.parallelStream().forEach(host ->
-                filesToTransfer.get(host).parallelStream().forEach(splitNo -> {
-                    String src = splitHostMap.get(splitNo) + ":" + mapNoToLoc(splitNo);
-                    String dest = host + ":" + mapNoToLoc(splitNo);
-                    ProcessBuilder transferPB = new ProcessBuilder("scp", "ablicq@"+src, "ablicq@"+dest);
-                    try {
-                        transferPB.start().waitFor();
-                    } catch (IOException | InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                })
-        );
-    }
-
-    public void runSortMaps(){
-        hosts.parallelStream().forEach(host ->{
-            ArrayList<String> sshWrapper = new ArrayList<>(Arrays.asList("ssh",
-                    "-o", "UserKnownHostsFile=/dev/null",
-                    "-o", "StrictHostKeyChecking=no",
-                    "ablicq@"+host));
-            mapAssignments.get(host).forEach(key ->{
-                ArrayList<String> cmd = new ArrayList<>(sshWrapper);
-                cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "1", key, keyId.get(key).toString()));
-                keySplitMap.get(key).stream().map(Object::toString).forEach(cmd::add);
-                //cmd.forEach(System.out::println);
-                ProcessBuilder runMapBuilder = new ProcessBuilder(cmd);
-                try{
-                    // Run the map
-                    Process runMapProcess = runMapBuilder.start();
-                    runMapProcess.waitFor();
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
-        });
-    }
-
-    public void runReduce(){
-        hosts.parallelStream().forEach(host ->{
-            ArrayList<String> sshWrapper = new ArrayList<>(Arrays.asList("ssh",
-                    "-o", "UserKnownHostsFile=/dev/null",
-                    "-o", "StrictHostKeyChecking=no",
-                    "ablicq@"+host));
-            mapAssignments.get(host).forEach(key->{
-                ArrayList<String> cmd = new ArrayList<>(sshWrapper);
-                cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "2", key, keyId.get(key).toString()));
-                ProcessBuilder runReduceBuilder = new ProcessBuilder(cmd);
-                try{
-                    Process runMapProcess=runReduceBuilder.start();
-                    runMapProcess.waitFor();
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
-        });
-    }
 
     public void fetchResults(){
         System.out.println("=====================================");
@@ -255,17 +80,5 @@ public class JobsManager {
                 e.printStackTrace();
             }
         });
-    }
-
-    public static void main(String[] args) {
-        JobsManager jobsManager = new JobsManager(args[0]);
-        jobsManager.assignSplits();
-        jobsManager.deploySplits();
-        jobsManager.runMaps();
-        jobsManager.shuffle();
-        jobsManager.tranferMaps();
-        jobsManager.runSortMaps();
-        jobsManager.runReduce();
-        jobsManager.fetchResults();
     }
 }

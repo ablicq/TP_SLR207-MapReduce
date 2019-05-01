@@ -43,6 +43,10 @@ public class Mapper {
         return keySplitMap;
     }
 
+    public HashMap<String, ArrayList<Integer>> getSplitAssignments() {
+        return splitAssignments;
+    }
+
     //*****************************************************************************************************************
     //*****************************************************************************************************************
     //                                                METHODS
