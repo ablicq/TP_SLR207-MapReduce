@@ -1,3 +1,4 @@
+import static_utils.MapSorter;
 import static_utils.Mapper;
 import static_utils.Reducer;
 
@@ -19,7 +20,7 @@ public class Main {
                 String mapKey = args[1];
                 String outNo = args[2];
                 ArrayList<String> maps = new ArrayList<>(Arrays.asList(args).subList(3, args.length));
-                Mapper.sortMaps(mapKey, outNo, maps);
+                MapSorter.sortMaps(mapKey, outNo, maps);
                 break;
             case 2: // sorted maps to reduced maps
                 String reduceKey = args[1];
