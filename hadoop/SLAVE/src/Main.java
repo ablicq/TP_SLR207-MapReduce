@@ -1,3 +1,6 @@
+import static_utils.Mapper;
+import static_utils.Reducer;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
