@@ -78,7 +78,7 @@ public class Mapper {
                     "ssh",
                     "-o", "UserKnownHostsFile=/dev/null",
                     "-o", "StrictHostKeyChecking=no",
-                    "ablicq@" + host,
+                    host,
                     "mkdir", "-p", "/tmp/ablicq/splits"
             );
 
@@ -88,7 +88,7 @@ public class Mapper {
             ArrayList<String> copyCmd = new ArrayList<>();
             copyCmd.add("scp");
             copyCmd.addAll(splitLocs);
-            copyCmd.add("ablicq@" + host + ":/tmp/ablicq/splits/");
+            copyCmd.add(host + ":/tmp/ablicq/splits/");
 
             ProcessBuilder scpPB = new ProcessBuilder(
                     copyCmd
@@ -115,7 +115,7 @@ public class Mapper {
             ArrayList<String> sshWrapper = new ArrayList<>(Arrays.asList("ssh",
                     "-o", "UserKnownHostsFile=/dev/null",
                     "-o", "StrictHostKeyChecking=no",
-                    "ablicq@"+host));
+                    host));
             splitAssignments.get(host).forEach(split ->{
                 ArrayList<String> cmd = new ArrayList<>(sshWrapper);
                 cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "0", split.toString()));

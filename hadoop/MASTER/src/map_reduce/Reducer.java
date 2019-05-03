@@ -60,7 +60,7 @@ public class Reducer {
                 shuffler.getFilesToTransfer().get(host).parallelStream().forEach(splitNo -> {
                     String src = splitHostMap.get(splitNo) + ":" + mapNoToLoc(splitNo);
                     String dest = host + ":" + mapNoToLoc(splitNo);
-                    ProcessBuilder transferPB = new ProcessBuilder("scp", "ablicq@"+src, "ablicq@"+dest);
+                    ProcessBuilder transferPB = new ProcessBuilder("scp", src, dest);
                     try {
                         transferPB.start().waitFor();
                     } catch (IOException | InterruptedException e) {
@@ -75,7 +75,7 @@ public class Reducer {
             ArrayList<String> sshWrapper = new ArrayList<>(Arrays.asList("ssh",
                     "-o", "UserKnownHostsFile=/dev/null",
                     "-o", "StrictHostKeyChecking=no",
-                    "ablicq@"+host));
+                    host));
             shuffler.getMapAssignments().get(host).forEach(key ->{
                 ArrayList<String> cmd = new ArrayList<>(sshWrapper);
                 cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "1", key, keyId.get(key).toString()));
@@ -98,7 +98,7 @@ public class Reducer {
             ArrayList<String> sshWrapper = new ArrayList<>(Arrays.asList("ssh",
                     "-o", "UserKnownHostsFile=/dev/null",
                     "-o", "StrictHostKeyChecking=no",
-                    "ablicq@"+host));
+                    host));
             shuffler.getMapAssignments().get(host).forEach(key->{
                 ArrayList<String> cmd = new ArrayList<>(sshWrapper);
                 cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "2", key, keyId.get(key).toString()));

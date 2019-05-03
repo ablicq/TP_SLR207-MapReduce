@@ -70,7 +70,7 @@ public class JobsManager {
         hosts.parallelStream().map(host -> new ProcessBuilder("ssh",
                 "-o", "UserKnownHostsFile=/dev/null",
                 "-o", "StrictHostKeyChecking=no",
-                "ablicq@" + host,
+                host,
                 "cat", "/tmp/ablicq/reduces/*")).forEach(catPB -> {
             try {
                 Process catP = catPB.start();
