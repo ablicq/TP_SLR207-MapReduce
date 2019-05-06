@@ -7,6 +7,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import static static_utils.Mapper.decode;
+
 public class MapSorter {
     /**
      * Collect the occurrences of a key in the maps, and put these on a file.
@@ -15,12 +17,13 @@ public class MapSorter {
      * @param maps the maps in which to look for the key
      */
     public static void sortMaps(String key, String outNo, ArrayList<String> maps) {
+        String decodedKey = decode(key);
         try(PrintWriter outPrinter = outNoToFile(outNo)){
             for(String m : maps) {
                 try(Scanner mapReader = mapNoToFile(m)){
                     while(mapReader.hasNextLine()){
                         String l = mapReader.nextLine();
-                        if(l.contains(key))
+                        if(l.contains(decodedKey))
                             outPrinter.println(l);
                     }
                 } catch (FileNotFoundException e) { e.printStackTrace(); }

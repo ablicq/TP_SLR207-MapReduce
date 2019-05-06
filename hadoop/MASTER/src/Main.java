@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
+        System.out.println(args[0] + " " + args[1]);
         int nbSplits= Splitter.split(args[0], args[1]);
         System.out.println("split phase finished with "+nbSplits+" splits");
         JobsManager jobsManager = new JobsManager("../slaves.conf", nbSplits);

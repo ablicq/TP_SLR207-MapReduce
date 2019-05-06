@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import static map_reduce.JobsManager.encode;
+
 public class Reducer {
     private ArrayList<String> hosts;
     private Shuffler shuffler;
@@ -32,11 +34,17 @@ public class Reducer {
      * </ul>
      */
     public void reduce(){
+        System.out.println("Assigning keys to slaves");
         this.shuffler.shuffle();
         this.genKeyIds();
+        System.out.println("Transferring maps");
         this.tranferMaps();
+        System.out.println("Sorting maps");
         this.runSortMaps();
+        System.out.println("Reducing maps");
         this.runReduce();
+        System.out.println("Reduce phase finished");
+        System.out.println("==================================");
     }
 
     /**
@@ -78,14 +86,11 @@ public class Reducer {
                     host));
             shuffler.getMapAssignments().get(host).forEach(key ->{
                 ArrayList<String> cmd = new ArrayList<>(sshWrapper);
-                cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "1", key, keyId.get(key).toString()));
+                cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "1", encode(key), keyId.get(key).toString()));
                 keySplitMap.get(key).stream().map(Object::toString).forEach(cmd::add);
-                //cmd.forEach(System.out::println);
                 ProcessBuilder runMapBuilder = new ProcessBuilder(cmd);
                 try{
-                    // Run the map
-                    Process runMapProcess = runMapBuilder.start();
-                    runMapProcess.waitFor();
+                    runMapBuilder.start().waitFor();
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -101,7 +106,7 @@ public class Reducer {
                     host));
             shuffler.getMapAssignments().get(host).forEach(key->{
                 ArrayList<String> cmd = new ArrayList<>(sshWrapper);
-                cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "2", key, keyId.get(key).toString()));
+                cmd.addAll(Arrays.asList("java", "-jar", "/tmp/ablicq/slave.jar", "2", encode(key), keyId.get(key).toString()));
                 ProcessBuilder runReduceBuilder = new ProcessBuilder(cmd);
                 try{
                     Process runMapProcess=runReduceBuilder.start();

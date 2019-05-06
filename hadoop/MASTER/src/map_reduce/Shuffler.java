@@ -48,13 +48,6 @@ public class Shuffler {
             }
             assignMap(key, host);
         });
-
-        // print for debug
-        System.out.println("Shuffle phase finished");
-        System.out.println("Assignments:");
-        mapAssignments.forEach((h, k) -> System.out.println(h + " -> " + k));
-        System.out.println("File transfers");
-        filesToTransfer.forEach((key, value) -> {System.out.print(key + " -> "); value.forEach(i -> System.out.print(i + " ")); System.out.print("\n");});
     }
 
     /**

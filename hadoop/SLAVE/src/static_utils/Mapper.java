@@ -3,6 +3,7 @@ package static_utils;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.Scanner;
 
@@ -44,7 +45,7 @@ public class Mapper {
         }
         // send the unique keys to the master through the standard output
         for (String word : uniqueKeys) {
-            System.out.println(word);
+            System.out.println(encode(word));
         }
     }
 
@@ -68,5 +69,17 @@ public class Mapper {
     private static PrintWriter splitNoToOutFile(String splitNo) throws IOException {
         String outPath = "/tmp/ablicq/maps/UM" + splitNo + ".txt";
         return new PrintWriter(outPath);
+    }
+
+    static String encode(String str) {
+        byte[] strBytes = str.getBytes();
+        byte[] encodedBytes = Base64.getEncoder().encode(strBytes);
+        return new String(encodedBytes);
+    }
+
+    static String decode(String str) {
+        byte[] strBytes = str.getBytes();
+        byte[] decodedBytes = Base64.getDecoder().decode(strBytes);
+        return new String(decodedBytes);
     }
 }

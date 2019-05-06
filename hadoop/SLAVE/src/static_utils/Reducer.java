@@ -4,6 +4,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import static static_utils.Mapper.decode;
+
 public class Reducer {
     /**
      * Reduce the sorted maps by counting the occurrences of the key in the inFile and put it in the outFile
@@ -11,6 +13,7 @@ public class Reducer {
      * @param inNo the index of the key to reduce (to get the inFile and outFile paths)
      */
     public static void reduce(String key, String inNo){
+        String decodedKey = decode(key);
         // create reduces folder if it doesn't exist
         if (Files.notExists(Paths.get("/tmp/ablicq/reduces")))
             createReducesFolder();
@@ -24,7 +27,7 @@ public class Reducer {
                     .mapToInt(l -> Integer.parseInt(l.split("\\s")[1]))
                     .sum();
             // format the result and put it in the output file
-            outPrint.println(key + " " + nbKey);
+            outPrint.println(decodedKey + " " + nbKey);
         }
         catch (IOException e) {e.printStackTrace();}
     }

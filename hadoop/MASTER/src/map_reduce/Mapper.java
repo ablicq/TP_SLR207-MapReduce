@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import static map_reduce.JobsManager.decode;
+
 public class Mapper {
     private ArrayList<String> hosts;
     private int nbSplits;
@@ -46,9 +48,14 @@ public class Mapper {
      * </ul>
      */
     public void map(){
+        System.out.println("Assigning splits");
         this.assignSplits();
+        System.out.println("Deploying splits");
         this.deploySplits();
+        System.out.println("Running maps");
         this.runMaps();
+        System.out.println("Map phase finished");
+        System.out.println("==================================");
     }
 
 
@@ -66,6 +73,12 @@ public class Mapper {
             }
             splitHostMap.put(i, h);
         }
+
+        for(String h : hosts){
+            if(!splitAssignments.containsKey(h)){
+                splitAssignments.put(h, new ArrayList<>());
+            }
+        }
     }
 
     /**
@@ -73,6 +86,9 @@ public class Mapper {
      */
     private void deploySplits() {
         hosts.parallelStream().forEach((host) -> {
+
+            // if no map job assigned to host, return
+            if(splitAssignments.get(host).isEmpty()) return;
 
             ProcessBuilder mkdirPB = new ProcessBuilder(
                     "ssh",
@@ -94,15 +110,9 @@ public class Mapper {
                     copyCmd
             );
 
-            mkdirPB.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-            mkdirPB.redirectError(ProcessBuilder.Redirect.INHERIT);
-
-            scpPB.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-            scpPB.redirectError(ProcessBuilder.Redirect.INHERIT);
-
             try {
                 mkdirPB.start().waitFor();
-                scpPB.start();
+                scpPB.start().waitFor();
             } catch (IOException | InterruptedException e) { e.printStackTrace(); }
         });
     }
@@ -137,10 +147,11 @@ public class Mapper {
                     while(val != null)
                     {
                         if (val.equals("\n")) {
-                            if(keySplitMap.containsKey(key)) {
-                                keySplitMap.get(key).add(split);
+                            String unescaped_key = decode(key);
+                            if(keySplitMap.containsKey(unescaped_key)) {
+                                keySplitMap.get(unescaped_key).add(split);
                             } else {
-                                keySplitMap.put(key, new ArrayList<>(Collections.singleton(split)));
+                                keySplitMap.put(unescaped_key, new ArrayList<>(Collections.singleton(split)));
                             }
                             key = "";
                         } else {
@@ -155,13 +166,6 @@ public class Mapper {
                 }
             });
         });
-        System.out.println("=====================================");
-        System.out.println("Map phase finished");
-        System.out.println("key -> splits:");
-        keySplitMap.forEach((key, value) -> {System.out.print(key + " -> "); value.forEach(i -> System.out.print(i + " ")); System.out.print("\n");});
-        System.out.println("split -> host:");
-        splitHostMap.forEach((key, value) -> System.out.println(key + " -> " + value));
-        System.out.println("=====================================");
     }
 
     private String splitNoToLoc(Integer splitNo) {

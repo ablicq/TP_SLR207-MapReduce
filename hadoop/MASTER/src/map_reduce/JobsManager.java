@@ -99,4 +99,16 @@ public class JobsManager {
         });
         return ret;
     }
+
+    static String encode(String str) {
+        byte[] strBytes = str.getBytes();
+        byte[] encodedBytes = Base64.getEncoder().encode(strBytes);
+        return new String(encodedBytes);
+    }
+
+    static String decode(String str) {
+        byte[] strBytes = str.getBytes();
+        byte[] decodedbytes = Base64.getDecoder().decode(strBytes);
+        return new String(decodedbytes);
+    }
 }
