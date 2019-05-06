@@ -61,7 +61,7 @@ public class Mapper {
     }
 
     private static Scanner splitNoToInFile(String splitNo) throws FileNotFoundException {
-        String inPath = "/tmp/ablicq/splits/S" + splitNo + ".txt";
+        String inPath = String.format("/tmp/ablicq/splits/S%02d.txt", Integer.parseInt(splitNo));
         return new Scanner(new File(inPath));
     }
 

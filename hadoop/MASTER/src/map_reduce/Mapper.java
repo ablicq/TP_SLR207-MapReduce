@@ -166,6 +166,6 @@ public class Mapper {
 
     private String splitNoToLoc(Integer splitNo) {
         String splitsLoc = "/tmp/ablicq/splits";
-        return splitsLoc + "/S" + splitNo + ".txt";
+        return splitsLoc + String.format("/S%02d.txt", splitNo);
     }
 }
