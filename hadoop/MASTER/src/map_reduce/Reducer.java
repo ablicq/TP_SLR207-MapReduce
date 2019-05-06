@@ -47,14 +47,15 @@ public class Reducer {
         System.out.println("==================================");
     }
 
-    /**
-     * Assign a unique id to each key
-     */
+
     private String mapNoToLoc(Integer mapNo) {
         String mapsLoc = "/tmp/ablicq/maps";
         return mapsLoc + "/UM" + mapNo + ".txt";
     }
 
+    /**
+     * Assign a unique id to each key
+     */
     private void genKeyIds() {
         int cpt = 0;
         for(String k :keySplitMap.keySet()){
@@ -63,6 +64,9 @@ public class Reducer {
         }
     }
 
+    /**
+     * Transfer all the maps to the right slaves for the reduce phase
+     */
     private void tranferMaps(){
         hosts.parallelStream().forEach(host ->
                 shuffler.getFilesToTransfer().get(host).parallelStream().forEach(splitNo -> {
@@ -78,6 +82,10 @@ public class Reducer {
         );
     }
 
+    /**
+     * Run the sort map on each slave
+     * ie go through all maps to collect the occurrences of the keys
+     */
     private void runSortMaps(){
         hosts.parallelStream().forEach(host ->{
             ArrayList<String> sshWrapper = new ArrayList<>(Arrays.asList("ssh",
@@ -98,6 +106,10 @@ public class Reducer {
         });
     }
 
+    /**
+     * Run the reduce on each slave
+     * ie count the occurrences of each key
+     */
     private void runReduce(){
         hosts.parallelStream().forEach(host ->{
             ArrayList<String> sshWrapper = new ArrayList<>(Arrays.asList("ssh",
