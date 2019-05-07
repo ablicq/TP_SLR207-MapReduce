@@ -1,6 +1,7 @@
 package static_utils;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
@@ -71,15 +72,25 @@ public class Mapper {
         return new PrintWriter(outPath);
     }
 
+    /**
+     * Encode a UTF8 string using BASE64 to avoid transmitting special characters
+     * @param str the string to encode
+     * @return the encoded string
+     */
     static String encode(String str) {
         byte[] strBytes = str.getBytes();
         byte[] encodedBytes = Base64.getEncoder().encode(strBytes);
         return new String(encodedBytes);
     }
 
+    /**
+     * Decode a BASE64 encoded string to a UTF8 string
+     * @param str the encoded string
+     * @return the decoded string
+     */
     static String decode(String str) {
         byte[] strBytes = str.getBytes();
         byte[] decodedBytes = Base64.getDecoder().decode(strBytes);
-        return new String(decodedBytes);
+        return new String(decodedBytes, Charset.forName("UTF8"));
     }
 }
