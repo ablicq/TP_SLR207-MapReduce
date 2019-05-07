@@ -9,7 +9,9 @@ task () {
     scp ../jar/slave.jar "$1:/tmp/ablicq/slave.jar" 
 }
 
-for host in `cat ../slaves.conf`
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+for host in `cat $DIR/../slaves.conf`
 do
 	task $host &
 done
