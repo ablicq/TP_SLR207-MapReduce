@@ -4,6 +4,8 @@ author: Aurélien Blicq
 geometry: margin=2cm
 ---
 
+*Le début de ce document reprend les questions du sujet de TP. Cependant, à partir de la question 41, j'ai arrêté de répondre au questions pour me concentrer sur l'implémentation de l'algorithme. A la fin du rapport, il y a une section* Résultats et Conclusion *qui reprend les tests effectués à la fin du projet.*
+
 # I- programme séquentiel
 
 1. Un HashMap est la structure la plus adaptée car elle permet de lier des mots (objets de type String) à un nombre d'occurences (objets de type Integer)
@@ -324,3 +326,15 @@ Tel qu'écrit ci-dessus, le programme s'execute séquentiellement en raison du `
 
 41. Cette question est très similaire à la précédente. Il faut cependant réccupérer les fichiers de splits individuellement car la notation `splits/*` du shell ne fonctionne pas avec les processBuilder.
 J'ai également utilisé parallelStream().forEach() qui permet d'effectuer des opération parallèles sur les éléments d'une collection.
+
+___
+# Résultats et Conclusion
+
+Après implémentation du projet, j'ai effectué un test avec le fichier *forestier.txt* du dépôt *les codes en vigueur*, le séparant 16 en splits de taille 100K, et éxécutant l'algorithme sur un panel de 28 slaves.
+
+Les tests ont été peu convaincants car l'éxécution a durée près de 40 minutes, contre quelques secondes pour l'algorithme séquentiel.
+
+Durant l'éxécution, j'ai remarqué que la structure `hosts.parallelStream.forEach(...)` que j'ai utilisée n'est capable de gérer que quatres éléments en parallèle, ce qui correspond au nombre de coeurs de ma machine master.
+L'éxécution était donc séquentielle et, en ajoutant les délais de synchronisation entre le master et les slaves, cela explique les performances faibles de cette implémentation.
+
+Afin de remèdier à cela, il faudrait utiliser des Threads pour gérer la communication avec chaque slave. On pourrait aussi utiliser des sockets pour communiquer entre le master et les slaves ou entre les slaves. J'ai malheureusement manqué de temps à la fin du projet pour mettre en oeuvre ces solutions.
